@@ -12,6 +12,7 @@ import com.jhgadgets.ims.model.Product;
 public interface ProductMapper {
 
 	@Mapping(source = "category.name", target = "categoryName")
+
 	ProductResponseDTO toDto(Product product);
 	List<ProductResponseDTO> toDtoList(List<Product> products);
 	
