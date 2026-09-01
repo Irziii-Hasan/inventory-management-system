@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.jhgadgets.ims.dto.InventoryResponseDTO;
 import com.jhgadgets.ims.model.Inventory;
+import com.jhgadgets.ims.model.Order;
 import com.jhgadgets.ims.model.Purchase;
 
 public interface InventoryService {
@@ -14,4 +15,5 @@ public interface InventoryService {
 	void deleteInventoryById(Long inventoryId);
 	
 	void updateInventoryAfterPurchase(Purchase purchase);
+	boolean updateInventoryAfterOrder(Order prder);
 }

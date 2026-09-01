@@ -13,6 +13,7 @@ import com.jhgadgets.ims.dto.InventoryResponseDTO;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.InventoryMapper;
 import com.jhgadgets.ims.model.Inventory;
+import com.jhgadgets.ims.model.Order;
 import com.jhgadgets.ims.model.Product;
 import com.jhgadgets.ims.model.Purchase;
 import com.jhgadgets.ims.repository.InventoryRepository;
@@ -110,6 +111,25 @@ public class InventoryServiceImpl implements InventoryService {
 			Inventory savedInventory = inventoryRepository.save(inventory);
 			logger.info("Inventory created with id: {}",savedInventory.getId());
 		}
+	}
+
+	@Override
+	public boolean updateInventoryAfterOrder(Order order) {
+		Optional<Inventory> existingInventory = inventoryRepository.findByProductId(order.getProduct().getId());
+//		checking if product is present in the inventory or not
+//		if present then check the quantity of product is same or greater than order quantity then deduct the quantity from inventory and return true(orderStatus = confirmed)
+//		if not present or quantity is less then return false (OrderStatus = pending)
+		if(existingInventory.isPresent()) {
+			Inventory inventory = existingInventory.get();
+			Integer availableQuantity = inventory.getQuantity();
+			if(availableQuantity>=order.getQuantity()) {
+				inventory.setQuantity(availableQuantity- order.getQuantity());
+				Inventory savedInventory = inventoryRepository.save(inventory);
+				logger.info("Inventory updated with id: {}", savedInventory.getId());
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

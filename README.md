@@ -1,10 +1,10 @@
 # JH Gadgets — Inventory & Price Comparison System
 
-A Spring Boot backend built for retailers who compare product prices across multiple malls and shops before buying or reselling. It centralizes price tracking and stock management that would otherwise be scattered across notebooks, WhatsApp chats, and Instagram posts.
+A Spring Boot backend built for retailers who compare product prices across multiple malls and shops before buying or reselling. It centralizes price tracking, stock management, and order handling that would otherwise be scattered across notebooks, WhatsApp chats, and Instagram posts.
 
 ## Problem it solves
 
-Retailers visit different malls and shops to check prices for the same product. Sometimes they just note the price and photo to post on social media for orders; sometimes they buy on the spot and record it manually, needing to track what they've bought, how much stock they have, and what it's worth. This project brings all of that into a single, structured system.
+Retailers visit different malls and shops to check prices for the same product. Sometimes they just note the price and photo to post on social media for orders; sometimes they buy on the spot and record it manually, needing to track what they've bought, how much stock they have, what it's worth, and which social-media orders they can actually fulfill. This project brings all of that into a single, structured system.
 
 ## Features
 
@@ -13,10 +13,12 @@ Retailers visit different malls and shops to check prices for the same product. 
 - Look up all products in a category
 - Look up all shop listings for a product, to compare prices at a glance
 - Record purchases (product, shop, quantity, price, date)
-- Automatic inventory tracking: every purchase updates stock quantity and recalculates a running weighted-average cost per product, so the retailer always knows total investment and can price resale accordingly
+- Automatic inventory tracking: every purchase updates stock quantity and recalculates a running weighted-average cost per product
+- Customer records (name, phone, address) reused across orders instead of re-entering details each time
+- Order management with automatic stock-aware status: an order is auto-confirmed (and stock deducted) if enough inventory exists, or left pending if it doesn't — no manual stock checking needed
 - Clean, flat API responses via DTOs (no raw nested entity data)
 - Centralized error handling with meaningful HTTP status codes
-- Request validation on all create endpoints
+- Request validation on all create endpoints (including a Pakistani phone number format check)
 - Logging to both console and file
 
 ## Tech Stack
@@ -36,6 +38,7 @@ src/main/java/com/jhgadgets/ims/
 ├── service/        Business logic (interfaces + impl)
 ├── repository/     Spring Data JPA repositories
 ├── model/          JPA entities
+│   └── enums/      Enum types (e.g. OrderStatus)
 ├── dto/            API response objects
 ├── mapper/         MapStruct entity-to-DTO mappers
 └── exception/      Custom exceptions + global exception handler
@@ -80,17 +83,21 @@ The API will be available at `http://localhost:8080`.
 | Shop Products (price listings) | `/api/shop-products` |
 | Purchases | `/api/purchases` |
 | Inventory | `/api/inventories` |
+| Customers | `/api/customers` |
+| Orders | `/api/orders` |
 
-Each resource supports standard CRUD (`GET`, `POST`, `DELETE`). A few extra endpoints support the core use case:
+Each resource supports standard CRUD (`GET`, `POST`, `DELETE`). A few extra endpoints support the core use cases:
 
 - `GET /api/products/category/{categoryId}` — all products in a category
 - `GET /api/shop-products/product/{productId}` — all shop listings (with prices) for a product, for direct comparison
 - `GET /api/inventories/product/{productId}` — current stock and average cost for a specific product
+- `GET /api/orders/customer/{customerId}` — all orders placed by a specific customer
 
-Creating a purchase (`POST /api/purchases`) automatically creates or updates the corresponding inventory record — no separate call needed.
+Creating a purchase (`POST /api/purchases`) automatically creates or updates the corresponding inventory record. Creating an order (`POST /api/orders`) checks current stock: if enough is available, stock is deducted and the order is marked `CONFIRMED`; otherwise it's marked `PENDING` and inventory is left untouched.
 
 ## Roadmap
 
-- Order management (for social-media-driven orders)
+- Manual order confirmation/delivery/cancellation endpoints for pending orders
+- Standard selling price on Product (as a default reference, separate from the price actually charged per order)
 - Authentication
 - Deployment
