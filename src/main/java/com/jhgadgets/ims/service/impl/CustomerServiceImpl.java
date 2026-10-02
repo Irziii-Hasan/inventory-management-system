@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.jhgadgets.ims.dto.CustomerResponseDTO;
+import com.jhgadgets.ims.dto.CustomerUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.CustomerMapper;
 import com.jhgadgets.ims.model.Customer;
@@ -50,6 +51,19 @@ public class CustomerServiceImpl implements CustomerService {
 		Customer customer = customerRepository.findById(customerId)
 				.orElseThrow(()-> new ResourceNotFoundException("Customer", "id", customerId));
 		customerRepository.deleteById(customer.getId());
+	}
+
+	@Override
+	public CustomerResponseDTO updateCustomer(Long customerId, CustomerUpdateRequest customer) {
+		Customer existingCustomer = customerRepository.findById(customerId)
+				.orElseThrow(()-> new ResourceNotFoundException("Customer", "id", customerId));
+		
+		customerMapper.updateCustomerFromRequestMapping(customer, existingCustomer);
+		
+		Customer updatedCustomer = customerRepository.save(existingCustomer);
+		logger.info("Customer updated with id: {}", updatedCustomer.getId());
+		
+		return customerMapper.toDto(updatedCustomer);
 	}
 
 }

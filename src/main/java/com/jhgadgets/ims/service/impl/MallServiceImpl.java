@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.jhgadgets.ims.dto.MallResponseDTO;
+import com.jhgadgets.ims.dto.MallUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.MallMapper;
 import com.jhgadgets.ims.model.Mall;
@@ -50,6 +51,18 @@ public class MallServiceImpl implements MallService {
 		Mall mall = mallRepository.findById(mallId)
 				.orElseThrow(()-> new ResourceNotFoundException("Mall", "id", mallId));
 		mallRepository.deleteById(mall.getId());
+	}
+
+	@Override
+	public MallResponseDTO updateMall(Long mallId, MallUpdateRequest request) {
+	    Mall existingMall = mallRepository.findById(mallId)
+	            .orElseThrow(() -> new ResourceNotFoundException("Mall", "id", mallId));
+	    
+	    mallMapper.updateMallFromRequest(request, existingMall);
+	    
+	    Mall updatedMall = mallRepository.save(existingMall);
+	    logger.info("Mall updated with id: {}", updatedMall.getId());
+	    return mallMapper.toDto(updatedMall);
 	}
 
 }

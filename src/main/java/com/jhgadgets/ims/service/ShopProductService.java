@@ -3,6 +3,7 @@ package com.jhgadgets.ims.service;
 import java.util.List;
 
 import com.jhgadgets.ims.dto.ShopProductResponseDTO;
+import com.jhgadgets.ims.dto.ShopProductUpdateRequest;
 import com.jhgadgets.ims.model.ShopProduct;
 
 public interface ShopProductService {
@@ -10,6 +11,7 @@ public interface ShopProductService {
 	ShopProductResponseDTO getShopProductById(Long shopProductId);
 	List<ShopProductResponseDTO> getAllShopProducts();
 	List<ShopProductResponseDTO> getShopProductByProductId(Long productId);
+	ShopProductResponseDTO updateShopProduct(Long shopProductId, ShopProductUpdateRequest request);
 	void deleteShopProductById(Long shopProductId);
 
 

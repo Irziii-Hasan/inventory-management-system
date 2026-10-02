@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhgadgets.ims.dto.PurchaseResponseDTO;
+import com.jhgadgets.ims.dto.PurchaseUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.PurchaseMapper;
 import com.jhgadgets.ims.model.Product;
@@ -71,6 +72,16 @@ public class PurchaseServiceImpl implements PurchaseService {
 				.orElseThrow(()-> new ResourceNotFoundException("Purchase", "id", purchaseId));
 		purchaseRepository.deleteById(purchase.getId());
 
+	}
+
+	@Override
+	public PurchaseResponseDTO updatePurchaseDate(Long purchaseId, PurchaseUpdateRequest purchase) {
+		Purchase existingPurchase = purchaseRepository.findById(purchaseId)
+				.orElseThrow(()-> new ResourceNotFoundException("Purchase", "id", purchaseId));
+		purchaseMapper.updatePurchaseFromRequestMapping(purchase, existingPurchase);
+		Purchase updatedPurchase = purchaseRepository.save(existingPurchase);
+		logger.info("Purchase date updated with id: {}", updatedPurchase.getId());
+		return purchaseMapper.toDto(updatedPurchase);
 	}
 
 }

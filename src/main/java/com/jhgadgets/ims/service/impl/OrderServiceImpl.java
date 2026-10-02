@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhgadgets.ims.dto.OrderResponseDTO;
+import com.jhgadgets.ims.dto.OrderUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.OrderMapper;
 import com.jhgadgets.ims.model.Customer;
@@ -84,6 +85,35 @@ public class OrderServiceImpl implements OrderService {
 		Order order = orderRepository.findById(orderId)
 				.orElseThrow(()-> new ResourceNotFoundException("Order", "orderId", orderId));
 		orderRepository.deleteById(order.getId());	
+	}
+
+	@Override
+	public OrderResponseDTO updateOrder(Long orderId, OrderUpdateRequest request) {
+	    Order existingOrder = orderRepository.findById(orderId)
+	            .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+
+	    if (request.getCustomerId() != null) {
+	        Customer customer = customerRepository.findById(request.getCustomerId())
+	                .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", request.getCustomerId()));
+	        existingOrder.setCustomer(customer);
+	    }
+
+	    if (request.getQuantity() != null || request.getProductId() != null) {
+	        if (existingOrder.getStatus() != OrderStatus.PENDING) {
+	            throw new IllegalStateException("Cannot modify quantity or product of a confirmed/delivered order");
+	        }
+	        if (request.getProductId() != null) {
+	            Product product = productRepository.findById(request.getProductId())
+	                    .orElseThrow(() -> new ResourceNotFoundException("Product", "id", request.getProductId()));
+	            existingOrder.setProduct(product);
+	        }
+	    }
+
+	    orderMapper.updateOrderFromRequest(request, existingOrder);
+
+	    Order updatedOrder = orderRepository.save(existingOrder);
+	    logger.info("Order updated with id: {}", updatedOrder.getId());
+	    return orderMapper.toDto(updatedOrder);
 	}
 
 }

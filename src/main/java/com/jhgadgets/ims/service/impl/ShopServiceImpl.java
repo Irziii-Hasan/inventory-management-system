@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.jhgadgets.ims.dto.ShopResponseDTO;
+import com.jhgadgets.ims.dto.ShopUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.ShopMapper;
 import com.jhgadgets.ims.model.Mall;
@@ -55,6 +56,23 @@ public class ShopServiceImpl implements ShopService {
 		Shop shop = shopRepository.findById(shopId)
 				.orElseThrow(()-> new ResourceNotFoundException("Shop", "id", shopId));
 		shopRepository.deleteById(shop.getId());
+	}
+
+	@Override
+	public ShopResponseDTO updateShop(Long shopId, ShopUpdateRequest request) {
+		Shop existingShop = shopRepository.findById(shopId)
+				.orElseThrow(()-> new ResourceNotFoundException("Shop", "id", shopId));
+		shopMapper.updateShopFromRequest(request, existingShop);
+		
+		if(request.getMallId()!=null) {
+			Mall newMall = mallRepository.findById(request.getMallId())
+					.orElseThrow(()-> new ResourceNotFoundException("Mall", "id", request.getMallId()));
+			existingShop.setMall(newMall);
+		}
+		
+		Shop updatedShop = shopRepository.save(existingShop);
+		logger.info("Shop updated with id:{}",updatedShop.getId());
+		return shopMapper.toDto(updatedShop);
 	}
 
 }

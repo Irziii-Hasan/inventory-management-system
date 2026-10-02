@@ -8,7 +8,7 @@ Retailers visit different malls and shops to check prices for the same product. 
 
 ## Features
 
-- Manage malls, shops, categories, and products
+- Manage malls, shops, categories, and products — including partial updates (PATCH) with null-safe field handling, so only the fields sent in a request are changed
 - Track prices for the same product across different shops (core price-comparison feature)
 - Look up all products in a category
 - Look up all shop listings for a product, to compare prices at a glance
@@ -16,8 +16,10 @@ Retailers visit different malls and shops to check prices for the same product. 
 - Automatic inventory tracking: every purchase updates stock quantity and recalculates a running weighted-average cost per product
 - Customer records (name, phone, address) reused across orders instead of re-entering details each time
 - Order management with automatic stock-aware status: an order is auto-confirmed (and stock deducted) if enough inventory exists, or left pending if it doesn't — no manual stock checking needed
+- Business-rule-guarded order updates: an order's quantity or product can only be changed while it's still `PENDING`, since inventory has already been adjusted once an order is `CONFIRMED`
+- Purchase records are treated as a near-immutable ledger — only the purchase date can be corrected after the fact, since quantity/price retroactively edited would silently invalidate the weighted-average cost already calculated for inventory
 - Clean, flat API responses via DTOs (no raw nested entity data)
-- Centralized error handling with meaningful HTTP status codes
+- Centralized error handling with meaningful HTTP status codes (404 for missing resources, 400 for validation failures, 409 for business-rule conflicts)
 - Request validation on all create endpoints (including a Pakistani phone number format check)
 - Logging to both console and file
 
@@ -39,7 +41,7 @@ src/main/java/com/jhgadgets/ims/
 ├── repository/     Spring Data JPA repositories
 ├── model/          JPA entities
 │   └── enums/      Enum types (e.g. OrderStatus)
-├── dto/            API response objects
+├── dto/            API request/response objects
 ├── mapper/         MapStruct entity-to-DTO mappers
 └── exception/      Custom exceptions + global exception handler
 ```
@@ -86,7 +88,11 @@ The API will be available at `http://localhost:8080`.
 | Customers | `/api/customers` |
 | Orders | `/api/orders` |
 
-Each resource supports standard CRUD (`GET`, `POST`, `DELETE`). A few extra endpoints support the core use cases:
+Each resource supports standard CRUD (`GET`, `POST`, `PATCH`, `DELETE`), with two deliberate exceptions:
+- **Inventory** has no PATCH endpoint — it's a derived record, always recalculated from Purchase/Order activity rather than edited directly.
+- **Purchase** only allows its `purchaseDate` to be updated via PATCH — quantity, price, product, and shop are locked after creation to protect the integrity of the weighted-average cost already applied to inventory.
+
+A few extra endpoints support the core use cases:
 
 - `GET /api/products/category/{categoryId}` — all products in a category
 - `GET /api/shop-products/product/{productId}` — all shop listings (with prices) for a product, for direct comparison
@@ -95,9 +101,18 @@ Each resource supports standard CRUD (`GET`, `POST`, `DELETE`). A few extra endp
 
 Creating a purchase (`POST /api/purchases`) automatically creates or updates the corresponding inventory record. Creating an order (`POST /api/orders`) checks current stock: if enough is available, stock is deducted and the order is marked `CONFIRMED`; otherwise it's marked `PENDING` and inventory is left untouched.
 
+Updating an order (`PATCH /api/orders/{orderId}`) follows the same stock-safety principle: `sellingPrice`, `customerId`, and `orderDate` can always be changed, but `quantity` and `productId` are only editable while the order is still `PENDING` — once `CONFIRMED`, inventory has already been deducted against the original quantity/product, so changing them is rejected with a `409 Conflict`.
+
 ## Roadmap
 
 - Manual order confirmation/delivery/cancellation endpoints for pending orders
 - Standard selling price on Product (as a default reference, separate from the price actually charged per order)
+- Purchase correction with inventory recalculation (reverse the old purchase's contribution to the weighted-average cost, then reapply the corrected values) — deferred for now since Purchase is currently immutable except for date
+- Three price tiers: original purchase price, wholesale/resale price, and direct-to-consumer price
+- Discount/sale pricing support
+- Optional extra product details at creation time
+- Multiple photos per product
+- Order returns/refunds handling
+- Partial or delayed payment tracking for orders
 - Authentication
 - Deployment

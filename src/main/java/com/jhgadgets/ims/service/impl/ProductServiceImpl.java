@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.jhgadgets.ims.dto.ProductResponseDTO;
+import com.jhgadgets.ims.dto.ProductUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.ProductMapper;
 import com.jhgadgets.ims.model.Category;
@@ -61,6 +62,23 @@ public class ProductServiceImpl implements ProductService {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(()-> new ResourceNotFoundException("Product", "id", productId));
 		productRepository.deleteById(product.getId());
+	}
+
+	@Override
+	public ProductResponseDTO updateProduct(Long productId, ProductUpdateRequest request) {
+		Product existingProduct = productRepository.findById(productId)
+				.orElseThrow(()-> new ResourceNotFoundException("Product", "id", productId));
+		productMapper.updateProductFromRequest(request, existingProduct);
+		
+		if(request.getCategoryId()!=null) {
+			Category newCategory = categoryRepository.findById(request.getCategoryId())
+					.orElseThrow(()-> new ResourceNotFoundException("Category", "id", request.getCategoryId()));
+			existingProduct.setCategory(newCategory);
+		}
+		
+		Product updatedProduct = productRepository.save(existingProduct);
+		logger.info("Product updated with id:{}", updatedProduct.getId());
+		return productMapper.toDto(updatedProduct);
 	}
 
 }

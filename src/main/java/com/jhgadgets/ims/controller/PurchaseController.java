@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhgadgets.ims.dto.PurchaseResponseDTO;
+import com.jhgadgets.ims.dto.PurchaseUpdateRequest;
 import com.jhgadgets.ims.model.Purchase;
 import com.jhgadgets.ims.service.PurchaseService;
 
@@ -48,5 +50,10 @@ public class PurchaseController {
 	public ResponseEntity<Void> deletePurchaseById(@PathVariable Long purchaseId){
 		purchaseService.deletePurchaseById(purchaseId);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+	
+	@PatchMapping("/{purchaseId}")
+	public ResponseEntity<PurchaseResponseDTO> updatePurchaseDate(@PathVariable Long purchaseId, @RequestBody PurchaseUpdateRequest purchase){
+		return new ResponseEntity<PurchaseResponseDTO>(purchaseService.updatePurchaseDate(purchaseId, purchase),HttpStatus.OK);
 	}
 }

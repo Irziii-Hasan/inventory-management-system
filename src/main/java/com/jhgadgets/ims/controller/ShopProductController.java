@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhgadgets.ims.dto.ShopProductResponseDTO;
+import com.jhgadgets.ims.dto.ShopProductUpdateRequest;
 import com.jhgadgets.ims.model.ShopProduct;
 import com.jhgadgets.ims.service.ShopProductService;
 
@@ -57,5 +59,10 @@ public class ShopProductController {
 	public ResponseEntity<List<ShopProductResponseDTO>> getShopProductByProductId(@PathVariable Long productId){
 		List<ShopProductResponseDTO> shopProduct = shopProductService.getShopProductByProductId(productId);
 		return new ResponseEntity<List<ShopProductResponseDTO>>(shopProduct,HttpStatus.OK);
+	}
+	
+	@PatchMapping("/{shopProductId}")
+	public ResponseEntity<ShopProductResponseDTO> updateShopProduct(@PathVariable Long shopProductId,@RequestBody ShopProductUpdateRequest request){
+		return new ResponseEntity<ShopProductResponseDTO>(shopProductService.updateShopProduct(shopProductId, request),HttpStatus.OK);
 	}
 }

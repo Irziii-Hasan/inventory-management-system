@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhgadgets.ims.dto.OrderResponseDTO;
+import com.jhgadgets.ims.dto.OrderUpdateRequest;
 import com.jhgadgets.ims.model.Order;
 import com.jhgadgets.ims.service.OrderService;
 
@@ -55,5 +57,8 @@ public class OrderController {
 		return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
 	}
 	
-	
+	@PatchMapping("/{orderId}")
+	public ResponseEntity<OrderResponseDTO> updateOrder(@PathVariable Long orderId, @RequestBody OrderUpdateRequest request){
+		return new ResponseEntity<OrderResponseDTO>(orderService.updateOrder(orderId, request),HttpStatus.OK);
+	}
 }

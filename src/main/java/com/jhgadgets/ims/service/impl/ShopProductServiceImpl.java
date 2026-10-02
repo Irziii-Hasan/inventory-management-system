@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.jhgadgets.ims.dto.ShopProductResponseDTO;
+import com.jhgadgets.ims.dto.ShopProductUpdateRequest;
 import com.jhgadgets.ims.exception.ResourceNotFoundException;
 import com.jhgadgets.ims.mapper.ShopProductMapper;
 import com.jhgadgets.ims.model.Product;
@@ -70,6 +71,27 @@ public class ShopProductServiceImpl implements ShopProductService {
 	@Override
 	public List<ShopProductResponseDTO> getShopProductByProductId(Long productId) {
 		return shopProductMapper.toDtoList(shopProductRepository.findByProductId(productId));
+	}
+
+	@Override
+	public ShopProductResponseDTO updateShopProduct(Long shopProductId, ShopProductUpdateRequest request) {
+		ShopProduct exisitngShopProduct = shopProductRepository.findById(shopProductId)
+				.orElseThrow(()-> new ResourceNotFoundException("ShopProduct", "id", shopProductId));
+		shopProductMapper.updateShopProductFromRequest(request, exisitngShopProduct);
+		if(request.getShopId()!=null) {
+			Shop newShop = shopRepository.findById(request.getShopId())
+					.orElseThrow(()-> new ResourceNotFoundException("Shop","id",request.getShopId()));
+			exisitngShopProduct.setShop(newShop);
+		}
+		if(request.getProductId()!=null) {
+			Product newProduct = productRepository.findById(request.getProductId())
+					.orElseThrow(() -> new ResourceNotFoundException("Product", "id", request.getProductId()));
+			exisitngShopProduct.setProduct(newProduct);
+		}
+		
+		ShopProduct updatedShopProduct = shopProductRepository.save(exisitngShopProduct);
+		logger.info("Shop product updated with id:{}",updatedShopProduct.getId());
+		return shopProductMapper.toDto(updatedShopProduct);
 	}
 
 }

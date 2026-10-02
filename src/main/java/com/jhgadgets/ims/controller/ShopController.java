@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhgadgets.ims.dto.ShopResponseDTO;
+import com.jhgadgets.ims.dto.ShopUpdateRequest;
 import com.jhgadgets.ims.model.Shop;
 import com.jhgadgets.ims.service.ShopService;
 
@@ -51,5 +53,10 @@ public class ShopController {
 	public ResponseEntity<Void> deleteShopById(@PathVariable Long shopId){
 		shopService.deleteShopById(shopId);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+	
+	@PatchMapping("/{shopId}")
+	public ResponseEntity<ShopResponseDTO> updateShop(@PathVariable Long shopId, @RequestBody ShopUpdateRequest request) {
+		return new ResponseEntity<>(shopService.updateShop(shopId, request),HttpStatus.OK);
 	}
 }

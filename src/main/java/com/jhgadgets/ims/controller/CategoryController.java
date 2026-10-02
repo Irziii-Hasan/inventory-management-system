@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,10 +18,6 @@ import com.jhgadgets.ims.model.Category;
 import com.jhgadgets.ims.service.CategoryService;
 
 import jakarta.validation.Valid;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
@@ -56,5 +56,8 @@ public class CategoryController {
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 	
-	
+	@PatchMapping("/{categoryId}")
+	public ResponseEntity<CategoryResponseDTO> updateCategoryById(@PathVariable Long categoryId,@Valid @RequestBody Category category){
+		return new ResponseEntity<CategoryResponseDTO>( categoryService.updateCategory(categoryId, category), HttpStatus.OK);
+	}
 }
