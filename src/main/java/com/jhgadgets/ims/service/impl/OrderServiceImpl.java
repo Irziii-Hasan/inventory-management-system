@@ -116,4 +116,61 @@ public class OrderServiceImpl implements OrderService {
 	    return orderMapper.toDto(updatedOrder);
 	}
 
+	@Transactional
+	@Override
+	public OrderResponseDTO confirmOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(()-> new ResourceNotFoundException("Order", "id", orderId));
+		
+		if(order.getStatus() != OrderStatus.PENDING){
+			throw new IllegalStateException("Only PENDING orders can be confirmed");
+		}
+		
+		boolean stockDeducted = inventoryService.updateInventoryAfterOrder(order);
+		if(!stockDeducted) {
+			throw new IllegalStateException("Not enough stock to confirm this order");
+		}
+		
+		order.setStatus(OrderStatus.CONFIRMED);
+		Order updatedOrder = orderRepository.save(order);
+		logger.info("Order confirmed with id: {}",updatedOrder.getId());
+		return orderMapper.toDto(updatedOrder);
+		
+	}
+
+	@Transactional
+	@Override
+	public OrderResponseDTO deliverOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(()-> new ResourceNotFoundException("Order", "id", orderId));
+		if(order.getStatus()!= OrderStatus.CONFIRMED) {
+			throw new IllegalStateException("Only confirmed status can delivered");
+		}
+		
+		order.setStatus(OrderStatus.DELIVERED);
+		Order updatedOrder =orderRepository.save(order);
+		logger.info("Order delivered with id: {}",updatedOrder.getId());
+		return orderMapper.toDto(updatedOrder);
+	}
+
+	@Transactional
+	@Override
+	public OrderResponseDTO cancelOrder(Long orderId) {
+	    Order order = orderRepository.findById(orderId)
+	            .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+	
+	    if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
+	        throw new IllegalStateException("Delivered or already cancelled orders cannot be cancelled");
+	    }
+	
+	    if (order.getStatus() == OrderStatus.CONFIRMED) {
+	        inventoryService.restoreInventoryAfterCancel(order.getProduct().getId(), order.getQuantity());
+	    }
+	
+	    order.setStatus(OrderStatus.CANCELLED);
+	    Order updatedOrder = orderRepository.save(order);
+	    logger.info("Order cancelled with id: {}", updatedOrder.getId());
+	    return orderMapper.toDto(updatedOrder);
+	}
+
 }

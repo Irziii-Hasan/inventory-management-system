@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -53,5 +54,12 @@ public class Purchase {
 	
 	@Column(columnDefinition = "DATE DEFAULT  (CURRENT_DATE)")
 	private LocalDate purchaseDate;
+	
+	@PrePersist
+	private void setPurchaseDate() {
+		if(purchaseDate== null) {
+			purchaseDate = LocalDate.now();
+		}
+	}
 
 }

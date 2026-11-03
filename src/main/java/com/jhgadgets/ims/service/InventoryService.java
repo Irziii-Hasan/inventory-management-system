@@ -16,4 +16,5 @@ public interface InventoryService {
 	
 	void updateInventoryAfterPurchase(Purchase purchase);
 	boolean updateInventoryAfterOrder(Order prder);
+	void restoreInventoryAfterCancel(Long productId, int quantity);
 }

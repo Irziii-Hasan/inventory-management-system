@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -56,4 +57,11 @@ public class Order {
 	
 	@Column(columnDefinition = "DATE DEFAULT  (CURRENT_DATE)")
 	private LocalDate orderDate;
+	
+	@PrePersist
+	private void setOrderDate() {
+		if(orderDate== null) {
+			orderDate = LocalDate.now();
+		}
+	}
 }

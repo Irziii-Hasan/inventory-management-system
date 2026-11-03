@@ -132,4 +132,13 @@ public class InventoryServiceImpl implements InventoryService {
 		return false;
 	}
 
+	@Override
+	public void restoreInventoryAfterCancel(Long productId, int quantity) {
+		Inventory inventory = inventoryRepository.findByProductId(productId)
+				.orElseThrow(()-> new ResourceNotFoundException("Inventory", "productId", productId));
+		int totalQuantity = inventory.getQuantity()+ quantity;
+		inventory.setQuantity(totalQuantity);
+		inventoryRepository.save(inventory);
+	}
+
 }
