@@ -8,16 +8,18 @@ Retailers visit different malls and shops to check prices for the same product. 
 
 ## Features
 
-- Manage malls, shops, categories, and products — including partial updates (PATCH) with null-safe field handling, so only the fields sent in a request are changed
+- Manage malls, shops, categories, and products, including partial updates (PATCH) with null-safe field handling, so only the fields sent in a request are changed
 - Track prices for the same product across different shops (core price-comparison feature)
 - Look up all products in a category
 - Look up all shop listings for a product, to compare prices at a glance
 - Record purchases (product, shop, quantity, price, date)
 - Automatic inventory tracking: every purchase updates stock quantity and recalculates a running weighted-average cost per product
 - Customer records (name, phone, address) reused across orders instead of re-entering details each time
-- Order management with automatic stock-aware status: an order is auto-confirmed (and stock deducted) if enough inventory exists, or left pending if it doesn't — no manual stock checking needed
+- Order management with automatic stock-aware status: an order is auto-confirmed (and stock deducted) if enough inventory exists, or left pending if it doesn't
+- Full order lifecycle: pending orders can be confirmed manually once stock arrives, confirmed orders can be marked delivered, and pending or confirmed orders can be cancelled (cancelling a confirmed order returns its stock to inventory)
 - Business-rule-guarded order updates: an order's quantity or product can only be changed while it's still `PENDING`, since inventory has already been adjusted once an order is `CONFIRMED`
-- Purchase records are treated as a near-immutable ledger — only the purchase date can be corrected after the fact, since quantity/price retroactively edited would silently invalidate the weighted-average cost already calculated for inventory
+- Purchase records are treated as a near-immutable ledger: only the purchase date can be corrected after the fact, since retroactively editing quantity/price would silently invalidate the weighted-average cost already calculated for inventory
+- Order and purchase dates default to the current date when not supplied
 - Clean, flat API responses via DTOs (no raw nested entity data)
 - Centralized error handling with meaningful HTTP status codes (404 for missing resources, 400 for validation failures, 409 for business-rule conflicts)
 - Request validation on all create endpoints (including a Pakistani phone number format check)
@@ -89,8 +91,8 @@ The API will be available at `http://localhost:8080`.
 | Orders | `/api/orders` |
 
 Each resource supports standard CRUD (`GET`, `POST`, `PATCH`, `DELETE`), with two deliberate exceptions:
-- **Inventory** has no PATCH endpoint — it's a derived record, always recalculated from Purchase/Order activity rather than edited directly.
-- **Purchase** only allows its `purchaseDate` to be updated via PATCH — quantity, price, product, and shop are locked after creation to protect the integrity of the weighted-average cost already applied to inventory.
+- **Inventory** has no PATCH endpoint. It's a derived record, always recalculated from Purchase/Order activity rather than edited directly.
+- **Purchase** only allows its `purchaseDate` to be updated via PATCH. Quantity, price, product, and shop are locked after creation to protect the integrity of the weighted-average cost already applied to inventory.
 
 A few extra endpoints support the core use cases:
 
@@ -98,16 +100,30 @@ A few extra endpoints support the core use cases:
 - `GET /api/shop-products/product/{productId}` — all shop listings (with prices) for a product, for direct comparison
 - `GET /api/inventories/product/{productId}` — current stock and average cost for a specific product
 - `GET /api/orders/customer/{customerId}` — all orders placed by a specific customer
+- `PATCH /api/orders/{orderId}/confirm` — confirm a `PENDING` order (rejected with 409 if stock is still insufficient)
+- `PATCH /api/orders/{orderId}/deliver` — mark a `CONFIRMED` order as `DELIVERED`
+- `PATCH /api/orders/{orderId}/cancel` — cancel a `PENDING` or `CONFIRMED` order; a confirmed order's stock is returned to inventory
 
 Creating a purchase (`POST /api/purchases`) automatically creates or updates the corresponding inventory record. Creating an order (`POST /api/orders`) checks current stock: if enough is available, stock is deducted and the order is marked `CONFIRMED`; otherwise it's marked `PENDING` and inventory is left untouched.
 
-Updating an order (`PATCH /api/orders/{orderId}`) follows the same stock-safety principle: `sellingPrice`, `customerId`, and `orderDate` can always be changed, but `quantity` and `productId` are only editable while the order is still `PENDING` — once `CONFIRMED`, inventory has already been deducted against the original quantity/product, so changing them is rejected with a `409 Conflict`.
+### Order status flow
+
+```
+PENDING ──confirm──▶ CONFIRMED ──deliver──▶ DELIVERED
+   │                     │
+   └──────cancel─────────┴──▶ CANCELLED
+```
+
+Any transition outside this diagram (for example delivering a pending order, or cancelling a delivered one) is rejected with `409 Conflict`.
+
+Updating an order (`PATCH /api/orders/{orderId}`) follows the same stock-safety principle: `sellingPrice`, `customerId`, and `orderDate` can always be changed, but `quantity` and `productId` are only editable while the order is still `PENDING`. Order status itself is never editable through this endpoint; it only changes through the transition endpoints above.
 
 ## Roadmap
 
-- Manual order confirmation/delivery/cancellation endpoints for pending orders
+- Graceful handling of deleting records that are linked to other records (clean 409 instead of a server error)
+- CORS configuration for a separate frontend
 - Standard selling price on Product (as a default reference, separate from the price actually charged per order)
-- Purchase correction with inventory recalculation (reverse the old purchase's contribution to the weighted-average cost, then reapply the corrected values) — deferred for now since Purchase is currently immutable except for date
+- Purchase correction with inventory recalculation (reverse the old purchase's contribution to the weighted-average cost, then reapply the corrected values); deferred for now since Purchase is currently immutable except for date
 - Three price tiers: original purchase price, wholesale/resale price, and direct-to-consumer price
 - Discount/sale pricing support
 - Optional extra product details at creation time
