@@ -21,7 +21,7 @@ Retailers visit different malls and shops to check prices for the same product. 
 - Purchase records are treated as a near-immutable ledger: only the purchase date can be corrected after the fact, since retroactively editing quantity/price would silently invalidate the weighted-average cost already calculated for inventory
 - Order and purchase dates default to the current date when not supplied
 - Clean, flat API responses via DTOs (no raw nested entity data)
-- Centralized error handling with meaningful HTTP status codes (404 for missing resources, 400 for validation failures, 409 for business-rule conflicts)
+- Centralized error handling with meaningful HTTP status codes (404 for missing resources, 400 for validation failures, 409 for business-rule conflicts and for operations blocked by linked records, such as deleting a category that still has products)
 - Request validation on all create endpoints (including a Pakistani phone number format check)
 - Logging to both console and file
 
@@ -120,7 +120,6 @@ Updating an order (`PATCH /api/orders/{orderId}`) follows the same stock-safety 
 
 ## Roadmap
 
-- Graceful handling of deleting records that are linked to other records (clean 409 instead of a server error)
 - CORS configuration for a separate frontend
 - Standard selling price on Product (as a default reference, separate from the price actually charged per order)
 - Purchase correction with inventory recalculation (reverse the old purchase's contribution to the weighted-average cost, then reapply the corrected values); deferred for now since Purchase is currently immutable except for date

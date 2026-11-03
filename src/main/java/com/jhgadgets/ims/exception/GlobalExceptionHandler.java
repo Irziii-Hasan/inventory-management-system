@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -54,4 +55,14 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<ErrorResponse>(errorResponse,HttpStatus.CONFLICT);
 	}
 	
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ErrorResponse> habdleDataIntegrityViolationException(DataIntegrityViolationException ex){
+		logger.error("Data integrity violation: {}", ex.getMessage());
+		ErrorResponse errorResponse = new ErrorResponse();
+	    errorResponse.setMessage("This operation cannot be completed because the record is linked to other records or conflicts with existing data");
+		errorResponse.setStatus(409);
+		errorResponse.setTimestamp(LocalDateTime.now());
+		
+		return new ResponseEntity<ErrorResponse>(errorResponse,HttpStatus.CONFLICT);
+	}
 }
