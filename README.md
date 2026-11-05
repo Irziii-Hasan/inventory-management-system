@@ -33,6 +33,7 @@ Retailers visit different malls and shops to check prices for the same product. 
 - **MapStruct** — compile-time Entity ↔ DTO mapping
 - **Lombok** — boilerplate reduction
 - **SLF4J / Logback** — logging
+- **springdoc-openapi** — Swagger UI for interactive API docs
 
 ## Project Structure
 
@@ -75,6 +76,7 @@ src/main/java/com/jhgadgets/ims/
    ```
 
 The API will be available at `http://localhost:8080`.
+Interactive API documentation is available at http://localhost:8080/swagger-ui/index.html once the app is running.
 
 ## API Overview
 
@@ -120,6 +122,7 @@ Updating an order (`PATCH /api/orders/{orderId}`) follows the same stock-safety 
 
 ## Roadmap
 
+- Dedicated request DTOs for create endpoints (currently they accept entities directly)
 - CORS configuration for a separate frontend
 - Standard selling price on Product (as a default reference, separate from the price actually charged per order)
 - Purchase correction with inventory recalculation (reverse the old purchase's contribution to the weighted-average cost, then reapply the corrected values); deferred for now since Purchase is currently immutable except for date
